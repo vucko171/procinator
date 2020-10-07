@@ -6,10 +6,10 @@ def parse(data):
     params=[]
     for line in data:
         if name=="":
-            nameArr = re.findall(r'\.CommandText\s*=\s*"JAGORA\.(.*?)"',line,flags=re.I)
+            nameArr = re.findall(r'\.CommandText\s*=\s*".*?JAGORA\.(.*?)(?:"|\()',line,flags=re.I)
             if len(nameArr):
                 name=nameArr[0]
-        paramsArr=re.findall(r'\.CreateParameter\((.*?),.*adParamInput.*,(.*?)\)\s*$', line, flags=re.I)
+        paramsArr=re.findall(r'\.CreateParameter\((.*?),.*adParamInput.*?,.*?,(.*?)\)\s*$', line, flags=re.I)
         if len(paramsArr):
             params.append(paramsArr[0])
     ret+="try {\n"
@@ -23,6 +23,7 @@ def parse(data):
     ret+="  throw new Error(error);\n"
     ret+="  // do something\n"
     ret+="}\n"
+    print(params)
     return ret
 
     
