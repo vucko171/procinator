@@ -3,6 +3,7 @@ def parse(data):
     data=data.split("\n")
     name=""
     ret=""
+    err_code=False
     params=[]
     for line in data:
         if name=="":
@@ -10,6 +11,8 @@ def parse(data):
             if len(nameArr):
                 name=nameArr[0]
         paramsArr=re.findall(r'\.CreateParameter\((.*?),.*adParamInput.*?,.*?,(.*?)\)\s*$', line, flags=re.I)
+        if "p_err_code" in line.lower():
+            err_code=True
         if len(paramsArr):
             params.append(paramsArr[0])
     ret+="try {\n"
@@ -18,6 +21,21 @@ def parse(data):
     for param in params:
         ret+="  sp.createParameter("+param[0]+", "+param[1]+");\n"
     ret+="  const temp = await sp.execute(false);\n"
+    if err_code:
+        ret+='''  if (temp.P_ERR_CODE) {
+   const errorObj = new SRTError(
+     ` Error occurred calling Stored Procedure(JAGORA.'''+name+'''): ${temp.P_ERR_MSG}`,
+     '',
+     temp.P_ERR_CODE.toString(),
+     '',
+     temp.P_ERR_MSG,
+     '',
+     '',
+     ''
+   );
+   errorObj.printSRTErrorToConsole();
+   throw errorObj;
+  }\n'''
     ret+="} catch (error) {\n"
     ret+="  connection.rollback();\n"
     ret+="  throw new Error(error);\n"
